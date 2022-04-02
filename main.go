@@ -19,6 +19,7 @@ func main() {
 	initRedis()
 	go connectRedis()
 	http.Handle("/ws", websocket.Handler(websocketHandle))
+	http.HandleFunc("/", defaultRoute)
 	if err := http.ListenAndServe(":"+port, nil); err != nil {
 		os.Exit(0)
 	}
@@ -49,4 +50,9 @@ func parse() {
 	if portStr != "" {
 		port = portStr
 	}
+}
+
+func defaultRoute(response http.ResponseWriter, request *http.Request) {
+	response.Header().Set("Content-Type", "application/json;charset=UTF-8")
+	response.Write([]byte("{\"code\":\"0\"}"))
 }
