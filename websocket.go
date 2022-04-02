@@ -5,9 +5,11 @@ import (
 	"encoding/hex"
 	"github.com/orcaman/concurrent-map"
 	"golang.org/x/net/websocket"
+	"sync/atomic"
 )
 
 var m = cmap.New()
+var c int32 = 0
 
 func send(key string, value string) {
 	wsObj, ok := m.Get(key)
@@ -52,9 +54,11 @@ func websocketHandle(ws *websocket.Conn) {
 	add(user)
 	defer del(user)
 
-	var data string
+	atomic.AddInt32(&c, 1)
+	defer atomic.AddInt32(&c, -1)
+
 	for {
-		e := websocket.Message.Receive(ws, &data)
+		e := WS_PING.Receive(ws, nil)
 		if e != nil {
 			return
 		}

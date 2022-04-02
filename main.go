@@ -11,6 +11,7 @@ import (
 var addr = ""
 var password = ""
 var db = 0
+var port = ""
 var prefix = "ws_push."
 
 func main() {
@@ -18,7 +19,7 @@ func main() {
 	initRedis()
 	go connectRedis()
 	http.Handle("/ws", websocket.Handler(websocketHandle))
-	if err := http.ListenAndServe(":8080", nil); err != nil {
+	if err := http.ListenAndServe(":"+port, nil); err != nil {
 		os.Exit(0)
 	}
 }
@@ -26,6 +27,7 @@ func main() {
 func parse() {
 	flag.StringVar(&addr, "addr", "localhost:6379", "redis连接地址")
 	flag.StringVar(&password, "password", "", "redis密码")
+	flag.StringVar(&port, "port", "8080", "端口")
 	flag.IntVar(&db, "db", 0, "redis数据库")
 	flag.Parse()
 	addrStr := os.Getenv("addr")
@@ -42,5 +44,9 @@ func parse() {
 		if e == nil {
 			db = dbInt
 		}
+	}
+	portStr := os.Getenv("port")
+	if portStr != "" {
+		port = portStr
 	}
 }
