@@ -1,7 +1,7 @@
 package main
 
 import (
-	"crypto/sha256"
+	"crypto/md5"
 	"encoding/hex"
 	"github.com/orcaman/concurrent-map"
 	"golang.org/x/net/websocket"
@@ -23,13 +23,19 @@ func send(key string, value string) {
 }
 
 func sendAll(value string) {
-	for t := range m.IterBuffered() {
-		wsObj := t.Val
-		ws := wsObj.(*websocket.Conn)
-		err := websocket.Message.Send(ws, value)
-		if err != nil {
-			ws.Close()
-		}
+	tuple := m.IterBuffered()
+	number := (cap(tuple) / 256) + 1
+	for i := 0; i < number; i++ {
+		go func() {
+			for t := range tuple {
+				wsObj := t.Val
+				ws := wsObj.(*websocket.Conn)
+				err := websocket.Message.Send(ws, value)
+				if err != nil {
+					ws.Close()
+				}
+			}
+		}()
 	}
 }
 
@@ -43,8 +49,8 @@ func websocketHandle(ws *websocket.Conn) {
 	if token == "" {
 		return
 	}
-	sum256 := sha256.Sum256([]byte(token))
-	user := prefix + hex.EncodeToString(sum256[:])
+	sum := md5.Sum([]byte(token))
+	user := prefix + hex.EncodeToString(sum[:])
 
 	if ok := m.SetIfAbsent(user, ws); !ok {
 		return
