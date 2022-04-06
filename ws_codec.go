@@ -4,10 +4,12 @@ import (
 	"golang.org/x/net/websocket"
 )
 
-var WS_PING = websocket.Codec{Marshal: marshal, Unmarshal: unmarshal}
+var WsPing = websocket.Codec{Marshal: marshal, Unmarshal: unmarshal}
+
+var emptyMsg = make([]byte, 0)
 
 func marshal(v interface{}) (msg []byte, payloadType byte, err error) {
-	return msg, websocket.PingFrame, err
+	return emptyMsg, websocket.PingFrame, err
 }
 
 func unmarshal(msg []byte, payloadType byte, v interface{}) (err error) {

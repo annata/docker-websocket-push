@@ -64,7 +64,7 @@ func websocketHandle(ws *websocket.Conn) {
 	defer atomic.AddInt32(&c, -1)
 
 	for {
-		e := WS_PING.Receive(ws, nil)
+		e := WsPing.Receive(ws, nil)
 		if e != nil {
 			return
 		}
