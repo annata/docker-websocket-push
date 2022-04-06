@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"github.com/go-redis/redis/v8"
 	"golang.org/x/net/context"
 	"os"
@@ -22,7 +23,8 @@ func connectRedis() {
 	for {
 		msg, err := pubsub.ReceiveMessage(context.TODO())
 		if err != nil {
-			os.Exit(1)
+			fmt.Println(err.Error())
+			os.Exit(0)
 			return
 		}
 

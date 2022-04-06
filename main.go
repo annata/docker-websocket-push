@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"golang.org/x/net/websocket"
 	"net/http"
 	"os"
@@ -21,6 +22,7 @@ func main() {
 	http.Handle("/ws", websocket.Handler(websocketHandle))
 	http.HandleFunc("/", defaultRoute)
 	if err := http.ListenAndServe(":"+port, nil); err != nil {
+		fmt.Println(err.Error())
 		os.Exit(0)
 	}
 }
