@@ -6,6 +6,7 @@ import (
 	"github.com/orcaman/concurrent-map"
 	"golang.org/x/net/websocket"
 	"sync/atomic"
+	"time"
 )
 
 var m = cmap.New()
@@ -63,10 +64,28 @@ func websocketHandle(ws *websocket.Conn) {
 	atomic.AddInt32(&c, 1)
 	defer atomic.AddInt32(&c, -1)
 
+	ch := make(chan any)
+	defer close(ch)
+	go ping(ch, ws)
 	for {
 		e := WsPing.Receive(ws, nil)
 		if e != nil {
 			return
+		}
+	}
+}
+
+func ping(ch chan any, ws *websocket.Conn) {
+	for {
+		select {
+		case <-ch:
+			return
+		case <-time.After(30 * time.Second):
+			err := WsPing.Send(ws, nil)
+			if err != nil {
+				ws.Close()
+				return
+			}
 		}
 	}
 }
