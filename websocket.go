@@ -134,10 +134,12 @@ func addTopic(topic, sn string, ws *websocket.Conn) {
 				return newValue
 			}
 		})
+		shard.RLock()
 		setRes := res.mm.SetIfAbsent(sn, ws)
 		if setRes {
 			atomic.AddInt32(&res.count, 1)
 		}
+		shard.RUnlock()
 	}
 }
 
@@ -158,7 +160,7 @@ func removeTopic(topic, sn string) {
 
 func delTopic(topic string) {
 	n.RemoveCb(topic, func(key string, v *WsMap, exists bool) bool {
-		if atomic.LoadInt32(&v.count) == 0 {
+		if exists && atomic.LoadInt32(&v.count) == 0 {
 			del(topic)
 			return true
 		} else {
