@@ -29,7 +29,7 @@ func connectRedis() {
 		}
 
 		if msg.Channel == prefix+"all" {
-			go sendAll(msg.Payload)
+			go sendAll(m, msg.Payload)
 		} else {
 			go send(msg.Channel, msg.Payload)
 		}

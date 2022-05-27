@@ -4,8 +4,8 @@ go 1.18
 
 require (
 	github.com/go-redis/redis/v8 v8.11.5
-	github.com/orcaman/concurrent-map v1.0.0
-	golang.org/x/net v0.0.0-20220325170049-de3da57026de
+	github.com/orcaman/concurrent-map/v2 v2.0.0
+	golang.org/x/net v0.0.0-20220526153639-5463443f8c37
 )
 
 require (
