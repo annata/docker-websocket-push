@@ -1,11 +1,8 @@
 package main
 
 import (
-	"crypto/md5"
-	"encoding/hex"
 	"github.com/orcaman/concurrent-map/v2"
 	"golang.org/x/net/websocket"
-	"strconv"
 	"sync/atomic"
 	"time"
 )
@@ -38,7 +35,6 @@ func sendAll(mm cmap.ConcurrentMap[*websocket.Conn], value string) {
 				err := websocket.Message.Send(ws, value)
 				if err != nil {
 					ws.Close()
-					return
 				}
 			}
 		}()
@@ -48,48 +44,49 @@ func sendAll(mm cmap.ConcurrentMap[*websocket.Conn], value string) {
 func websocketHandle(ws *websocket.Conn) {
 	defer ws.Close()
 
-	token := ws.Request().URL.Query().Get("token")
-	if token == "" {
-		token = ws.Request().Header.Get("token")
-		if token == "" {
-			token = ws.Request().URL.Query().Get("token0")
-			if token == "" {
-				token = ws.Request().Header.Get("token0")
-				if token == "" {
-					return
-				}
-			}
-		}
-	}
+	//token := ws.Request().URL.Query().Get("token")
+	//if token == "" {
+	//	token = ws.Request().Header.Get("token")
+	//	if token == "" {
+	//		token = ws.Request().URL.Query().Get("token0")
+	//		if token == "" {
+	//			token = ws.Request().Header.Get("token0")
+	//			if token == "" {
+	//				return
+	//			}
+	//		}
+	//	}
+	//}
+	//
+	//sn := strconv.FormatUint(atomic.AddUint64(&snn, 1), 10)
+	//m.Set(sn, ws)
+	//defer m.Remove(sn)
+	//
+	//sum := md5.Sum([]byte(token))
+	//user := prefix + hex.EncodeToString(sum[:])
+	//
+	//tokenList := make([]string, 0, 4)
+	//tokenList = append(tokenList, user)
+	//for i := 1; ; i++ {
+	//	token = ws.Request().URL.Query().Get("token" + strconv.Itoa(i))
+	//	if token == "" {
+	//		token = ws.Request().Header.Get("token" + strconv.Itoa(i))
+	//		if token == "" {
+	//			break
+	//		}
+	//	}
+	//	sum = md5.Sum([]byte(token))
+	//	user = prefix + hex.EncodeToString(sum[:])
+	//	tokenList = append(tokenList, user)
+	//}
+	//
+	//addTopics(tokenList, sn, ws)
+	//defer removeTopics(tokenList, sn)
 
-	sn := strconv.FormatUint(atomic.AddUint64(&snn, 1), 10)
-	m.Set(sn, ws)
-	defer m.Remove(sn)
-
-	sum := md5.Sum([]byte(token))
-	user := prefix + hex.EncodeToString(sum[:])
-
-	tokenList := make([]string, 0, 4)
-	tokenList = append(tokenList, user)
-	for i := 1; ; i++ {
-		token = ws.Request().URL.Query().Get("token" + strconv.Itoa(i))
-		if token == "" {
-			token = ws.Request().Header.Get("token" + strconv.Itoa(i))
-			if token == "" {
-				break
-			}
-		}
-		sum = md5.Sum([]byte(token))
-		user = prefix + hex.EncodeToString(sum[:])
-		tokenList = append(tokenList, user)
-	}
-
-	addTopics(tokenList, sn, ws)
-	defer removeTopics(tokenList, sn)
-
-	ch := make(chan any)
-	defer close(ch)
-	go ping(ch, ws)
+	closeFlag := make(chan any)
+	defer close(closeFlag)
+	go wsConnect(closeFlag, ws)
+	go ping(closeFlag, ws)
 	for {
 		e := WsPing.Receive(ws, nil)
 		if e != nil {
@@ -111,22 +108,17 @@ func removeTopics(topic []string, sn string) {
 }
 
 func addTopic(topic, sn string, ws *websocket.Conn) {
+	var mm *WsMap
+	var ok bool
 	shard := n.GetShard(topic)
 	shard.RLock()
-	mm, ok := n.Get(topic)
-	if ok {
-		setRes := mm.mm.SetIfAbsent(sn, ws)
-		if setRes {
-			atomic.AddInt32(&mm.count, 1)
-		}
-		shard.RUnlock()
-	} else {
+	for mm, ok = n.Get(topic); !ok; mm, ok = n.Get(topic) {
 		shard.RUnlock()
 		mm = &WsMap{
 			mm:    cmap.New[*websocket.Conn](),
 			count: 0,
 		}
-		res := n.Upsert(topic, mm, func(exist bool, valueInMap, newValue *WsMap) *WsMap {
+		n.Upsert(topic, mm, func(exist bool, valueInMap, newValue *WsMap) *WsMap {
 			if exist {
 				return valueInMap
 			} else {
@@ -135,12 +127,12 @@ func addTopic(topic, sn string, ws *websocket.Conn) {
 			}
 		})
 		shard.RLock()
-		setRes := res.mm.SetIfAbsent(sn, ws)
-		if setRes {
-			atomic.AddInt32(&res.count, 1)
-		}
-		shard.RUnlock()
 	}
+	setRes := mm.mm.SetIfAbsent(sn, ws)
+	if setRes {
+		atomic.AddInt32(&mm.count, 1)
+	}
+	shard.RUnlock()
 }
 
 func removeTopic(topic, sn string) {
@@ -169,12 +161,12 @@ func delTopic(topic string) {
 	})
 }
 
-func ping(ch chan any, ws *websocket.Conn) {
+func ping(closeFlag <-chan any, ws *websocket.Conn) {
 	ticker := time.NewTicker(40 * time.Second)
 	defer ticker.Stop()
 	for {
 		select {
-		case <-ch:
+		case <-closeFlag:
 			return
 		case <-ticker.C:
 			err := WsPing.Send(ws, nil)
