@@ -6,10 +6,9 @@ import (
 )
 
 var pubsub *redis.PubSub
-var rdb *redis.Client
 
 func initRedis(ctx context.Context) {
-	rdb = redis.NewClient(&redis.Options{
+	rdb := redis.NewClient(&redis.Options{
 		Addr:     addr,
 		Password: password, // no password set
 		DB:       db,       // use default DB
@@ -18,6 +17,7 @@ func initRedis(ctx context.Context) {
 }
 
 func connectRedis(ctx context.Context) {
+	defer pubsub.Close()
 	for {
 		msg, err := pubsub.ReceiveMessage(ctx)
 		if err != nil {
@@ -33,10 +33,10 @@ func connectRedis(ctx context.Context) {
 	}
 }
 
-func add(user string) {
-	pubsub.Subscribe(ctx, user)
+func add(user string) error {
+	return pubsub.Subscribe(ctx, user)
 }
 
-func del(user string) {
-	pubsub.Unsubscribe(ctx, user)
+func del(user string) error {
+	return pubsub.Unsubscribe(ctx, user)
 }

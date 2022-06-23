@@ -55,18 +55,6 @@ func websocketHandle(ws *websocket.Conn) {
 	}
 }
 
-func addTopics(topic []string, sn string, ws *websocket.Conn) {
-	for _, v := range topic {
-		addTopic(v, sn, ws)
-	}
-}
-
-func removeTopics(topic []string, sn string) {
-	for _, v := range topic {
-		removeTopic(v, sn)
-	}
-}
-
 func addTopic(topic, sn string, ws *websocket.Conn) {
 	var mm *WsMap
 	var ok bool
