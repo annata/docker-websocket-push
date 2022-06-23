@@ -43,46 +43,6 @@ func sendAll(mm cmap.ConcurrentMap[*websocket.Conn], value string) {
 
 func websocketHandle(ws *websocket.Conn) {
 	defer ws.Close()
-
-	//token := ws.Request().URL.Query().Get("token")
-	//if token == "" {
-	//	token = ws.Request().Header.Get("token")
-	//	if token == "" {
-	//		token = ws.Request().URL.Query().Get("token0")
-	//		if token == "" {
-	//			token = ws.Request().Header.Get("token0")
-	//			if token == "" {
-	//				return
-	//			}
-	//		}
-	//	}
-	//}
-	//
-	//sn := strconv.FormatUint(atomic.AddUint64(&snn, 1), 10)
-	//m.Set(sn, ws)
-	//defer m.Remove(sn)
-	//
-	//sum := md5.Sum([]byte(token))
-	//user := prefix + hex.EncodeToString(sum[:])
-	//
-	//tokenList := make([]string, 0, 4)
-	//tokenList = append(tokenList, user)
-	//for i := 1; ; i++ {
-	//	token = ws.Request().URL.Query().Get("token" + strconv.Itoa(i))
-	//	if token == "" {
-	//		token = ws.Request().Header.Get("token" + strconv.Itoa(i))
-	//		if token == "" {
-	//			break
-	//		}
-	//	}
-	//	sum = md5.Sum([]byte(token))
-	//	user = prefix + hex.EncodeToString(sum[:])
-	//	tokenList = append(tokenList, user)
-	//}
-	//
-	//addTopics(tokenList, sn, ws)
-	//defer removeTopics(tokenList, sn)
-
 	closeFlag := make(chan any)
 	defer close(closeFlag)
 	go wsConnect(closeFlag, ws)
@@ -166,6 +126,8 @@ func ping(closeFlag <-chan any, ws *websocket.Conn) {
 	defer ticker.Stop()
 	for {
 		select {
+		case <-ctx.Done():
+			return
 		case <-closeFlag:
 			return
 		case <-ticker.C:
