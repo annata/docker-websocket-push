@@ -41,10 +41,12 @@ func stopHttp(server *http.Server) {
 }
 
 func parse() {
+	var customerPrefix = ""
 	flag.StringVar(&addr, "addr", "localhost:6379", "redis连接地址")
 	flag.StringVar(&password, "password", "", "redis密码")
 	flag.StringVar(&port, "port", "8080", "端口")
 	flag.IntVar(&db, "db", 0, "redis数据库")
+	flag.StringVar(&customerPrefix, "customer_prefix", "", "频道前缀")
 	flag.Parse()
 	addrStr := os.Getenv("addr")
 	if addrStr != "" {
@@ -64,6 +66,13 @@ func parse() {
 	portStr := os.Getenv("port")
 	if portStr != "" {
 		port = portStr
+	}
+	customerPrefixStr := os.Getenv("prefix")
+	if customerPrefixStr != "" {
+		customerPrefix = customerPrefixStr
+	}
+	if customerPrefix != "" {
+		prefix = customerPrefix + "." + prefix
 	}
 }
 
