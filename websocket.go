@@ -27,15 +27,17 @@ func send(key string, value string) {
 
 func sendAll(mm cmap.ConcurrentMap[*websocket.Conn], value string) {
 	tuple := mm.IterBuffered()
-	number := (cap(tuple) / 128) + 1
+	number := (cap(tuple) / 256) + 1
 	for i := 0; i < number; i++ {
 		go func() {
 			for t := range tuple {
 				ws := t.Val
-				err := websocket.Message.Send(ws, value)
-				if err != nil {
-					ws.Close()
-				}
+				go func() {
+					err := websocket.Message.Send(ws, value)
+					if err != nil {
+						ws.Close()
+					}
+				}()
 			}
 		}()
 	}
