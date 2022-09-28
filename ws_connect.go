@@ -11,7 +11,7 @@ import (
 func wsConnect(closeFlag <-chan any, ws *websocket.Conn) {
 	sn := strconv.FormatUint(atomic.AddUint64(&snn, 1), 10)
 	go globalMap(closeFlag, sn, ws)
-	for i := 0; i < 16; i++ {
+	for i := 0; i < 64; i++ {
 		token := ws.Request().URL.Query().Get("token" + strconv.Itoa(i))
 		if token == "" {
 			token = ws.Request().Header.Get("token" + strconv.Itoa(i))

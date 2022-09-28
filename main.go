@@ -25,8 +25,9 @@ func main() {
 	parse()
 	initRedis(ctx)
 	go connectRedis(ctx)
-	http.Handle("/ws", websocket.Handler(websocketHandle))
-	http.HandleFunc("/", defaultRoute)
+	http.HandleFunc("/ping", defaultRoute)
+	http.HandleFunc("/api/ping", defaultRoute)
+	http.Handle("/", websocket.Handler(websocketHandle))
 	server := &http.Server{Addr: ":" + port, Handler: nil}
 	go stopHttp(server)
 	err := server.ListenAndServe()
@@ -46,7 +47,7 @@ func parse() {
 	flag.StringVar(&password, "password", "", "redis密码")
 	flag.StringVar(&port, "port", "8080", "端口")
 	flag.IntVar(&db, "db", 0, "redis数据库")
-	flag.StringVar(&customerPrefix, "customer_prefix", "", "频道前缀")
+	flag.StringVar(&customerPrefix, "prefix", "", "频道前缀")
 	flag.Parse()
 	addrStr := os.Getenv("addr")
 	if addrStr != "" {
