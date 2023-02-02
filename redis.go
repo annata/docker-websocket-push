@@ -6,9 +6,10 @@ import (
 )
 
 var pubsub *redis.PubSub
+var rdb *redis.Client
 
 func initRedis(ctx context.Context) {
-	rdb := redis.NewClient(&redis.Options{
+	rdb = redis.NewClient(&redis.Options{
 		Addr:     addr,
 		Password: password, // no password set
 		DB:       db,       // use default DB

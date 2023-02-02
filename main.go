@@ -18,6 +18,7 @@ var port = ""
 var prefix = "ws_push."
 var ctx context.Context
 var cancel context.CancelFunc
+var pushBool bool
 
 func main() {
 	ctx, cancel = context.WithCancel(context.Background())
@@ -27,6 +28,10 @@ func main() {
 	go connectRedis(ctx)
 	http.HandleFunc("/ping", defaultRoute)
 	http.HandleFunc("/api/ping", defaultRoute)
+	if pushBool {
+		http.HandleFunc("/push", pushRoute)
+		http.HandleFunc("/api/push", pushRoute)
+	}
 	http.Handle("/", websocket.Handler(websocketHandle))
 	server := &http.Server{Addr: ":" + port, Handler: nil}
 	go stopHttp(server)
@@ -48,6 +53,7 @@ func parse() {
 	flag.StringVar(&port, "port", "8080", "端口")
 	flag.IntVar(&db, "db", 0, "redis数据库")
 	flag.StringVar(&customerPrefix, "prefix", "", "频道前缀")
+	flag.BoolVar(&pushBool, "push", false, "是否允许推送")
 	flag.Parse()
 	addrStr := os.Getenv("addr")
 	if addrStr != "" {
@@ -74,6 +80,13 @@ func parse() {
 	}
 	if customerPrefix != "" {
 		prefix = customerPrefix + "." + prefix
+	}
+	pushStr := os.Getenv("push")
+	if pushStr != "" {
+		pushTmp, err := strconv.ParseBool(pushStr)
+		if err == nil {
+			pushBool = pushTmp
+		}
 	}
 }
 
