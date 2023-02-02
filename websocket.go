@@ -12,7 +12,7 @@ var m = cmap.New[*websocket.Conn]()
 var n = cmap.New[*WsMap]()
 
 type WsMap struct {
-	mm    cmap.ConcurrentMap[*websocket.Conn]
+	mm    cmap.ConcurrentMap[string, *websocket.Conn]
 	count int32
 }
 
@@ -25,7 +25,7 @@ func send(key string, value string) {
 	}
 }
 
-func sendAll(mm cmap.ConcurrentMap[*websocket.Conn], value string) {
+func sendAll(mm cmap.ConcurrentMap[string, *websocket.Conn], value string) {
 	tuple := mm.IterBuffered()
 	number := (cap(tuple) / 256) + 1
 	for i := 0; i < number; i++ {
