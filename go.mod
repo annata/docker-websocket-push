@@ -1,11 +1,11 @@
 module websocket_push
 
-go 1.20
+go 1.21
 
 require (
 	github.com/go-redis/redis/v8 v8.11.5
 	github.com/orcaman/concurrent-map/v2 v2.0.1
-	golang.org/x/net v0.14.0
+	golang.org/x/net v0.18.0
 )
 
 require (
