@@ -29,6 +29,9 @@ func pushRoute(response http.ResponseWriter, request *http.Request) {
 			go rdb.Publish(ctx, topic, body)
 		}
 	}
-	response.Header().Set("Content-Type", "application/json;charset=UTF-8")
+	header := response.Header()
+	header.Set("Content-Type", "application/json;charset=UTF-8")
+	header.Set("Access-Control-Allow-Origin", "*")
+
 	response.Write([]byte("{\"code\":\"0\"}"))
 }
