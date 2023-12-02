@@ -31,7 +31,29 @@ func pushRoute(response http.ResponseWriter, request *http.Request) {
 	}
 	header := response.Header()
 	header.Set("Content-Type", "application/json;charset=UTF-8")
-	header.Set("Access-Control-Allow-Origin", "*")
+	//header.Set("Access-Control-Allow-Origin", "*")
 
 	response.Write([]byte("{\"code\":\"0\"}"))
+}
+
+func corsHandler(handler func(http.ResponseWriter, *http.Request)) http.HandlerFunc {
+	return func(response http.ResponseWriter, request *http.Request) {
+		addCorsHeader(response)
+		if request.Method == "OPTIONS" {
+			response.WriteHeader(http.StatusOK)
+			return
+		} else {
+			handler(response, request)
+		}
+	}
+}
+
+func addCorsHeader(res http.ResponseWriter) {
+	headers := res.Header()
+	headers.Add("Access-Control-Allow-Origin", "*")
+	headers.Add("Vary", "Origin")
+	headers.Add("Vary", "Access-Control-Request-Method")
+	headers.Add("Vary", "Access-Control-Request-Headers")
+	headers.Add("Access-Control-Allow-Headers", "Content-Type, Origin, Accept, token")
+	headers.Add("Access-Control-Allow-Methods", "GET, POST,OPTIONS")
 }

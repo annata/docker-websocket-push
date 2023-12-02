@@ -29,8 +29,8 @@ func main() {
 	http.HandleFunc("/ping", defaultRoute)
 	http.HandleFunc("/api/ping", defaultRoute)
 	if pushBool {
-		http.HandleFunc("/push", pushRoute)
-		http.HandleFunc("/api/push", pushRoute)
+		http.HandleFunc("/push", corsHandler(pushRoute))
+		http.HandleFunc("/api/push", corsHandler(pushRoute))
 	}
 	http.Handle("/", websocket.Handler(websocketHandle))
 	server := &http.Server{Addr: ":" + port, Handler: nil}
