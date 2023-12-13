@@ -1,7 +1,7 @@
 package main
 
 import (
-	"crypto/tls"
+	"fmt"
 	"github.com/go-redis/redis/v8"
 	"golang.org/x/net/context"
 )
@@ -10,16 +10,20 @@ var pubsub *redis.PubSub
 var rdb *redis.Client
 
 func initRedis(ctx context.Context) {
-	var tlsConfig *tls.Config = nil
+	//redis://user:password@localhost:6789/3
+	redisConnectStr := ""
 	if tlsBool {
-		tlsConfig = &tls.Config{ServerName: addr}
+		redisConnectStr += "rediss://"
+	} else {
+		redisConnectStr += "redis://"
 	}
-	rdb = redis.NewClient(&redis.Options{
-		Addr:      addr,
-		Password:  password, // no password set
-		DB:        db,       // use default DB
-		TLSConfig: tlsConfig,
-	})
+	redisConnectStr += password + "@" + addr + "/" + db
+	option, err := redis.ParseURL(redisConnectStr)
+	if err != nil {
+		fmt.Println(err.Error())
+		return
+	}
+	rdb = redis.NewClient(option)
 	pubsub = rdb.Subscribe(ctx, prefix+"all")
 }
 

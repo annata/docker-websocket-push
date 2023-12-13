@@ -13,7 +13,7 @@ import (
 
 var addr = ""
 var password = ""
-var db = 0
+var db = "0"
 var port = ""
 var prefix = "ws_push."
 var ctx context.Context
@@ -26,6 +26,9 @@ func main() {
 	ctx, _ = signal.NotifyContext(ctx, syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP, syscall.SIGQUIT)
 	parse()
 	initRedis(ctx)
+	if rdb == nil {
+		return
+	}
 	go connectRedis(ctx)
 	http.HandleFunc("/ping", defaultRoute)
 	http.HandleFunc("/api/ping", defaultRoute)
@@ -52,7 +55,7 @@ func parse() {
 	flag.StringVar(&addr, "addr", "localhost:6379", "redis连接地址")
 	flag.StringVar(&password, "password", "", "redis密码")
 	flag.StringVar(&port, "port", "8080", "端口")
-	flag.IntVar(&db, "db", 0, "redis数据库")
+	flag.StringVar(&db, "db", "0", "redis数据库")
 	flag.BoolVar(&tlsBool, "tls", false, "数据库是否加密连接")
 	flag.StringVar(&customerPrefix, "prefix", "", "频道前缀")
 	flag.BoolVar(&pushBool, "push", false, "是否允许推送")
@@ -67,10 +70,7 @@ func parse() {
 	}
 	dbStr := os.Getenv("db")
 	if dbStr != "" {
-		dbInt, e := strconv.Atoi(dbStr)
-		if e == nil {
-			db = dbInt
-		}
+		db = dbStr
 	}
 	portStr := os.Getenv("port")
 	if portStr != "" {
