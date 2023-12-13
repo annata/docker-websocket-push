@@ -12,7 +12,7 @@ var rdb *redis.Client
 func initRedis(ctx context.Context) {
 	var tlsConfig *tls.Config = nil
 	if tlsBool {
-		tlsConfig = &tls.Config{}
+		tlsConfig = &tls.Config{ServerName: addr}
 	}
 	rdb = redis.NewClient(&redis.Options{
 		Addr:      addr,
