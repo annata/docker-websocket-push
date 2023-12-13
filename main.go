@@ -19,6 +19,7 @@ var prefix = "ws_push."
 var ctx context.Context
 var cancel context.CancelFunc
 var pushBool bool
+var tlsBool bool
 
 func main() {
 	ctx, cancel = context.WithCancel(context.Background())
@@ -52,6 +53,7 @@ func parse() {
 	flag.StringVar(&password, "password", "", "redis密码")
 	flag.StringVar(&port, "port", "8080", "端口")
 	flag.IntVar(&db, "db", 0, "redis数据库")
+	flag.BoolVar(&tlsBool, "tls", false, "数据库是否加密连接")
 	flag.StringVar(&customerPrefix, "prefix", "", "频道前缀")
 	flag.BoolVar(&pushBool, "push", false, "是否允许推送")
 	flag.Parse()
@@ -73,6 +75,13 @@ func parse() {
 	portStr := os.Getenv("port")
 	if portStr != "" {
 		port = portStr
+	}
+	tlsStr := os.Getenv("tls")
+	if tlsStr != "" {
+		tlsTmp, err := strconv.ParseBool(tlsStr)
+		if err == nil {
+			tlsBool = tlsTmp
+		}
 	}
 	customerPrefixStr := os.Getenv("prefix")
 	if customerPrefixStr != "" {
