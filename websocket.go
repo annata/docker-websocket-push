@@ -60,7 +60,7 @@ func websocketHandle(ws *websocket.Conn) {
 	}
 	defer removeTopicSet(topicSet, sn)
 	for {
-		var subscribe *Subscribe
+		var subscribe *Subscribe = &Subscribe{}
 		e := WsSubscribe.Receive(ws, subscribe)
 		if e != nil {
 			return
