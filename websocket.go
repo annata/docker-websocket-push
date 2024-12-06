@@ -1,8 +1,11 @@
 package main
 
 import (
+	"crypto/md5"
+	"encoding/hex"
 	"github.com/orcaman/concurrent-map/v2"
 	"golang.org/x/net/websocket"
+	"strconv"
 	"sync/atomic"
 	"time"
 )
@@ -47,13 +50,42 @@ func websocketHandle(ws *websocket.Conn) {
 	defer ws.Close()
 	closeFlag := make(chan any)
 	defer close(closeFlag)
-	go wsConnect(closeFlag, ws)
+	sn := strconv.FormatUint(atomic.AddUint64(&snn, 1), 10)
+	//go wsConnect(sn, closeFlag, ws)
 	go ping(closeFlag, ws)
+	go globalMap(closeFlag, sn, ws)
+	topicSet := parseToken(ws)
+	for k, _ := range topicSet {
+		go addTopic(k, sn, ws)
+	}
+	defer removeTopicSet(topicSet, sn)
 	for {
-		e := WsPing.Receive(ws, nil)
+		var subscribe *Subscribe
+		e := WsSubscribe.Receive(ws, subscribe)
 		if e != nil {
 			return
 		}
+		if subscribe != nil {
+			token := subscribe.Token
+			if token != "" {
+				if subscribe.Op == "subscribe" {
+					sum := md5.Sum([]byte(token))
+					topic := prefix + hex.EncodeToString(sum[:])
+					topicSet[topic] = 0
+					go addTopic(topic, sn, ws)
+				} else if subscribe.Op == "unsubscribe" {
+					sum := md5.Sum([]byte(token))
+					topic := prefix + hex.EncodeToString(sum[:])
+					go removeTopic(topic, sn)
+				}
+			}
+		}
+	}
+}
+
+func removeTopicSet(topicSet map[string]int, sn string) {
+	for k, _ := range topicSet {
+		go removeTopic(k, sn)
 	}
 }
 
